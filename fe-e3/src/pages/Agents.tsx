@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { SearchInput } from '@/components/ui/search-input'
 import {
@@ -12,12 +13,15 @@ import {
 } from '@/components/ui/select'
 import { AgentList } from '@/components/agents/AgentList'
 import { AgentForm } from '@/components/agents/AgentForm'
+import { AgentDetail } from '@/components/agents/AgentDetail'
 import { useAgents, useAgent, useCreateAgent, useUpdateAgent, useDeleteAgent } from '@/lib/hooks/useAgents'
 import type { AgentListItem } from '@/types/agent'
 
 export default function Agents() {
+  const navigate = useNavigate()
   const [formOpen, setFormOpen] = useState(false)
   const [editingAgentId, setEditingAgentId] = useState<string | null>(null)
+  const [viewingAgentId, setViewingAgentId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<string>('created_desc')
 
@@ -88,9 +92,24 @@ export default function Agents() {
     }
   }
 
+  const handleView = (agent: AgentListItem) => {
+    setViewingAgentId(agent.id)
+  }
+
   const handleEdit = (agent: AgentListItem) => {
     setEditingAgentId(agent.id)
     setFormOpen(true)
+  }
+
+  const handleViewConversation = (conversationId: string) => {
+    navigate('/conversations', { state: { conversationId } })
+  }
+
+  const handleEditFromDetail = () => {
+    if (viewingAgentId) {
+      setEditingAgentId(viewingAgentId)
+      setFormOpen(true)
+    }
   }
 
   const handleDelete = (id: string) => {
@@ -111,6 +130,26 @@ export default function Agents() {
     if (!open) {
       setEditingAgentId(null)
     }
+  }
+
+  if (viewingAgentId) {
+    return (
+      <>
+        <AgentDetail
+          agentId={viewingAgentId}
+          onClose={() => setViewingAgentId(null)}
+          onEdit={handleEditFromDetail}
+          onViewConversation={handleViewConversation}
+        />
+        <AgentForm
+          open={formOpen}
+          onOpenChange={handleOpenChange}
+          onSubmit={handleUpdate}
+          agent={editingAgent}
+          isLoading={updateAgent.isPending}
+        />
+      </>
+    )
   }
 
   return (
@@ -154,7 +193,12 @@ export default function Agents() {
       {isLoading ? (
         <div className="text-center py-8 text-muted-foreground">Loading agents...</div>
       ) : (
-        <AgentList agents={filteredAndSortedAgents} onEdit={handleEdit} onDelete={handleDelete} />
+        <AgentList 
+          agents={filteredAndSortedAgents} 
+          onView={handleView}
+          onEdit={handleEdit} 
+          onDelete={handleDelete} 
+        />
       )}
 
       <AgentForm

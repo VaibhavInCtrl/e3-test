@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,16 +14,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { formatDate, formatRelativeTime } from '@/lib/utils'
+import { formatRelativeTime } from '@/lib/utils'
 import type { AgentListItem } from '@/types/agent'
 
 interface AgentListProps {
   agents: AgentListItem[]
+  onView: (agent: AgentListItem) => void
   onEdit: (agent: AgentListItem) => void
   onDelete: (id: string) => void
 }
 
-export function AgentList({ agents, onEdit, onDelete }: AgentListProps) {
+export function AgentList({ agents, onView, onEdit, onDelete }: AgentListProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -46,27 +46,42 @@ export function AgentList({ agents, onEdit, onDelete }: AgentListProps) {
             </TableRow>
           ) : (
             agents.map((agent) => (
-              <TableRow key={agent.id}>
-                <TableCell className="font-medium">{agent.name}</TableCell>
-                <TableCell>{formatRelativeTime(agent.created_at)}</TableCell>
-                <TableCell>
+              <TableRow key={agent.id} className="cursor-pointer hover:bg-muted/50">
+                <TableCell 
+                  className="font-medium"
+                  onClick={() => onView(agent)}
+                >
+                  {agent.name}
+                </TableCell>
+                <TableCell onClick={() => onView(agent)}>
+                  {formatRelativeTime(agent.created_at)}
+                </TableCell>
+                <TableCell onClick={() => onView(agent)}>
                   {agent.last_used_at ? formatRelativeTime(agent.last_used_at) : 'Never'}
                 </TableCell>
-                <TableCell>{agent.conversation_count}</TableCell>
+                <TableCell onClick={() => onView(agent)}>
+                  {agent.conversation_count}
+                </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEdit(agent)}>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation()
+                        onEdit(agent)
+                      }}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => onDelete(agent.id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onDelete(agent.id)
+                        }}
                         className="text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />

@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { SearchInput } from '@/components/ui/search-input'
 import {
   Select,
@@ -13,12 +14,19 @@ import { useConversations } from '@/lib/hooks/useConversations'
 import { ConversationStatus } from '@/types/conversation'
 
 export default function Conversations() {
+  const location = useLocation()
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('created_desc')
 
   const { data: conversations = [], isLoading } = useConversations()
+
+  useEffect(() => {
+    if (location.state?.conversationId) {
+      setSelectedConversationId(location.state.conversationId)
+    }
+  }, [location.state])
 
   const filteredAndSortedConversations = useMemo(() => {
     let filtered = conversations.filter((conv) => {
@@ -48,12 +56,14 @@ export default function Conversations() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
-        <p className="text-muted-foreground">
-          View all conversations and their transcripts
-        </p>
-      </div>
+      {!selectedConversationId && (
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
+          <p className="text-muted-foreground">
+            View all conversations and their transcripts
+          </p>
+        </div>
+      )}
 
       {selectedConversationId ? (
         <ConversationDetail

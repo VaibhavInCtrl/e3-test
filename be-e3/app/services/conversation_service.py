@@ -1,3 +1,4 @@
+import logging
 from typing import List
 from uuid import UUID
 from datetime import datetime
@@ -6,25 +7,40 @@ from app.database.client import get_supabase
 from app.models.conversation import ConversationCreate, ConversationResponse, ConversationListResponse, ConversationStatusResponse, ConversationStatus
 from app.models.message import MessageCreate, MessageResponse
 
+logger = logging.getLogger(__name__)
+
 class ConversationService:
     def __init__(self):
         self.supabase = get_supabase()
     
     async def create_conversation(self, conversation: ConversationCreate) -> ConversationResponse:
-        result = self.supabase.table("conversations").insert({
-            "agent_id": str(conversation.agent_id),
-            "driver_id": str(conversation.driver_id),
-            "load_number": conversation.load_number,
-            "status": ConversationStatus.PENDING.value
-        }).execute()
+        logger.info(f"Creating conversation for agent: {conversation.agent_id}, driver: {conversation.driver_id}")
         
-        if not result.data:
+        try:
+            result = self.supabase.table("conversations").insert({
+                "agent_id": str(conversation.agent_id),
+                "driver_id": str(conversation.driver_id),
+                "load_number": conversation.load_number,
+                "status": ConversationStatus.PENDING.value
+            }).execute()
+            
+            if not result.data:
+                logger.error("Failed to create conversation: No data returned")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to create conversation"
+                )
+            
+            logger.info(f"Successfully created conversation: {result.data[0]['id']}")
+            return ConversationResponse(**result.data[0])
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error creating conversation: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to create conversation"
+                detail=f"Failed to create conversation: {str(e)}"
             )
-        
-        return ConversationResponse(**result.data[0])
     
     async def get_conversation(self, conversation_id: UUID) -> ConversationResponse:
         result = self.supabase.table("conversations").select("*").eq("id", str(conversation_id)).execute()
@@ -87,17 +103,29 @@ class ConversationService:
         self.supabase.table("conversations").update(update_data).eq("id", str(conversation_id)).execute()
     
     async def add_message(self, message: MessageCreate) -> MessageResponse:
-        result = self.supabase.table("messages").insert({
-            "conversation_id": str(message.conversation_id),
-            "role": message.role.value,
-            "content": message.content
-        }).execute()
+        logger.debug(f"Adding message to conversation: {message.conversation_id}")
         
-        if not result.data:
+        try:
+            result = self.supabase.table("messages").insert({
+                "conversation_id": str(message.conversation_id),
+                "role": message.role.value,
+                "content": message.content
+            }).execute()
+            
+            if not result.data:
+                logger.error(f"Failed to add message: No data returned")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to add message"
+                )
+            
+            return MessageResponse(**result.data[0])
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error adding message: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to add message"
+                detail=f"Failed to add message: {str(e)}"
             )
-        
-        return MessageResponse(**result.data[0])
 

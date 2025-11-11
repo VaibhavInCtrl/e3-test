@@ -73,15 +73,15 @@ export function WebCallInterface({ accessToken, conversationId, onCallEnd }: Web
         })
 
         retellClient.current.on('error', (error) => {
-          console.error('Retell error:', error)
           if (!mounted) return
           setError(`Connection error: ${error.message || 'Unknown error'}. Please try again.`)
           setIsCallActive(false)
           setConnectionStatus('Error')
         })
 
-        retellClient.current.on('disconnect', (reason) => {
-          console.log('Disconnected:', reason)
+        retellClient.current.on('disconnect', () => {
+          if (!mounted) return
+          setIsCallActive(false)
         })
 
         if (!mounted) return
@@ -94,7 +94,6 @@ export function WebCallInterface({ accessToken, conversationId, onCallEnd }: Web
           emitRawAudioSamples: false
         })
       } catch (err: any) {
-        console.error('Failed to start call:', err)
         if (!mounted) return
         
         if (err.name === 'NotAllowedError') {
@@ -111,13 +110,13 @@ export function WebCallInterface({ accessToken, conversationId, onCallEnd }: Web
 
     return () => {
       mounted = false
-      if (retellClient.current) {
-        try {
-          retellClient.current.stopCall()
-        } catch (e) {
-          console.error('Error stopping call:', e)
+        if (retellClient.current) {
+          try {
+            retellClient.current.stopCall()
+          } catch {
+            // Ignore errors when stopping call on unmount
+          }
         }
-      }
     }
   }, [accessToken, onCallEnd])
 
@@ -126,12 +125,12 @@ export function WebCallInterface({ accessToken, conversationId, onCallEnd }: Web
       retellClient.current.stopCall()
     }
     
-    try {
-      await testCallsApi.endCall(conversationId)
-      setConnectionStatus('Processing...')
-    } catch (err) {
-      console.error('Failed to end call:', err)
-    }
+      try {
+        await testCallsApi.endCall(conversationId)
+        setConnectionStatus('Processing...')
+      } catch {
+        // Call ended on frontend, backend will handle cleanup
+      }
   }
 
   return (

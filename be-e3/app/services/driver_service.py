@@ -1,26 +1,42 @@
+import logging
 from typing import List
 from uuid import UUID
 from fastapi import HTTPException, status
 from app.database.client import get_supabase
 from app.models.driver import DriverCreate, DriverUpdate, DriverResponse
 
+logger = logging.getLogger(__name__)
+
 class DriverService:
     def __init__(self):
         self.supabase = get_supabase()
     
     async def create_driver(self, driver: DriverCreate) -> DriverResponse:
-        result = self.supabase.table("drivers").insert({
-            "name": driver.name,
-            "phone_number": driver.phone_number
-        }).execute()
+        logger.info(f"Creating driver: {driver.name}")
         
-        if not result.data:
+        try:
+            result = self.supabase.table("drivers").insert({
+                "name": driver.name,
+                "phone_number": driver.phone_number
+            }).execute()
+            
+            if not result.data:
+                logger.error("Failed to create driver: No data returned")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to create driver"
+                )
+            
+            logger.info(f"Successfully created driver: {result.data[0]['id']}")
+            return DriverResponse(**result.data[0])
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error creating driver: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to create driver"
+                detail=f"Failed to create driver: {str(e)}"
             )
-        
-        return DriverResponse(**result.data[0])
     
     async def get_driver(self, driver_id: UUID) -> DriverResponse:
         result = self.supabase.table("drivers").select("*").eq("id", str(driver_id)).execute()

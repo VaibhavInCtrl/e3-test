@@ -1,23 +1,12 @@
-import re
+import logging
 from openai import AsyncOpenAI
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 class PromptGenerationService:
     def __init__(self):
         self.client = AsyncOpenAI(api_key=settings.openai_api_key)
-    
-    def prepare_prompt_for_call(
-        self,
-        system_prompt: str,
-        driver_name: str,
-        load_number: str
-    ) -> str:
-        prompt = system_prompt.replace("{{driver_name}}", driver_name)
-        prompt = prompt.replace("{{load_number}}", load_number)
-        
-        prompt = re.sub(r'\{\{[^}]+\}\}', '', prompt)
-        
-        return prompt
     
     async def generate_system_prompt(
         self,
@@ -624,11 +613,17 @@ Iterate based on which metrics need improvement."""
 Additional context:
 {context_addition}"""
 
-        response = await self.client.chat.completions.create(
-            model=settings.openai_model,
-            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-            temperature=0.7
-        )
+        logger.info("Calling OpenAI for system prompt generation")
         
-        return response.choices[0].message.content.strip()
+        try:
+            response = await self.client.chat.completions.create(
+                model=settings.openai_model,
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+                temperature=0.7
+            )
+            logger.info("Successfully generated system prompt")
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.error(f"Failed to generate system prompt: {e}")
+            raise
 

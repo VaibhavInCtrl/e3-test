@@ -1,6 +1,9 @@
+import logging
 from retell import Retell
 from typing import Dict, Optional
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 class RetellService:
     def __init__(self):
@@ -14,37 +17,54 @@ class RetellService:
         enable_backchanneling: bool = True,
         interruption_sensitivity: float = 0.8
     ) -> Dict:
-        retell_llm = self.client.llm.create(
-            general_prompt=system_prompt,
-            begin_message="Hello {{driver_name}}, this is dispatch calling about load {{load_number}}. How can I help you?",
-            general_tools=[],
-            starting_state="default",
-            start_speaker="agent",
-            states=[
-                {
-                    "name": "default",
-                    "edges": []
-                }
-            ]
-        )
+        logger.info(f"Creating Retell agent: {name}")
         
-        agent = self.client.agent.create(
-            agent_name=name,
-            voice_id=voice_id or settings.retell_default_voice_id,
-            response_engine={
-                "type": "retell-llm",
-                "llm_id": retell_llm.llm_id
-            },
-            enable_backchannel=enable_backchanneling,
-            interruption_sensitivity=interruption_sensitivity,
-            responsiveness=1,
-            ambient_sound="coffee-shop",
-            backchannel_frequency=0.9,
-            backchannel_words=["yeah", "uh-huh", "I see", "got it"],
-            end_call_after_silence_ms=30000
-        )
+        try:
+            retell_llm = self.client.llm.create(
+                general_prompt=system_prompt,
+                begin_message="Hi {{driver_name}}, this is dispatch with a check call on load {{load_number}}. Can you give me an update on your status?",
+                general_tools=[],
+                starting_state="default",
+                start_speaker="agent",
+                states=[
+                    {
+                        "name": "default",
+                        "edges": []
+                    }
+                ]
+            )
+            logger.info(f"Created Retell LLM: {retell_llm.llm_id}")
+        except Exception as e:
+            logger.error(f"Failed to create Retell LLM: {e}")
+            raise
         
-        self.client.agent.publish(agent.agent_id)
+        try:
+            agent = self.client.agent.create(
+                agent_name=name,
+                voice_id=voice_id or settings.retell_default_voice_id,
+                response_engine={
+                    "type": "retell-llm",
+                    "llm_id": retell_llm.llm_id
+                },
+                enable_backchannel=enable_backchanneling,
+                interruption_sensitivity=interruption_sensitivity,
+                responsiveness=1,
+                ambient_sound="coffee-shop",
+                backchannel_frequency=0.9,
+                backchannel_words=["yeah", "uh-huh", "I see", "got it"],
+                end_call_after_silence_ms=30000
+            )
+            logger.info(f"Created Retell agent: {agent.agent_id}")
+        except Exception as e:
+            logger.error(f"Failed to create Retell agent: {e}")
+            raise
+        
+        try:
+            self.client.agent.publish(agent.agent_id)
+            logger.info(f"Published Retell agent: {agent.agent_id}")
+        except Exception as e:
+            logger.error(f"Failed to publish Retell agent: {e}")
+            raise
         
         return {
             "agent_id": agent.agent_id,
@@ -58,11 +78,18 @@ class RetellService:
         metadata: Dict,
         retell_llm_dynamic_variables: Optional[Dict] = None
     ) -> Dict:
-        call = self.client.call.create_web_call(
-            agent_id=agent_id,
-            metadata=metadata,
-            retell_llm_dynamic_variables=retell_llm_dynamic_variables or {}
-        )
+        logger.info(f"Creating web call for agent: {agent_id}")
+        
+        try:
+            call = self.client.call.create_web_call(
+                agent_id=agent_id,
+                metadata=metadata,
+                retell_llm_dynamic_variables=retell_llm_dynamic_variables or {}
+            )
+            logger.info(f"Created web call: {call.call_id}")
+        except Exception as e:
+            logger.error(f"Failed to create web call: {e}")
+            raise
         
         return {
             "call_id": call.call_id,
@@ -71,7 +98,14 @@ class RetellService:
         }
     
     async def get_call_details(self, call_id: str) -> Dict:
-        call = self.client.call.retrieve(call_id)
+        logger.debug(f"Retrieving call details: {call_id}")
+        
+        try:
+            call = self.client.call.retrieve(call_id)
+            logger.info(f"Retrieved call details: {call_id}")
+        except Exception as e:
+            logger.error(f"Failed to retrieve call details: {e}")
+            raise
 
         return {
             "call_id": call.call_id,

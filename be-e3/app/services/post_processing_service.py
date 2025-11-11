@@ -1,7 +1,10 @@
 import json
+import logging
 from openai import AsyncOpenAI
 from typing import Dict
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 class PostProcessingService:
     def __init__(self):
@@ -71,13 +74,24 @@ Extract the relevant structured data as JSON:
 Call transcript:
 {transcript}
 """
-        response = await self.client.chat.completions.create(
-            model=settings.openai_model,
-            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-            response_format={"type": "json_object"},
-            temperature=0.3
-        )
+        logger.info("Calling OpenAI for structured data extraction")
+        
         try:
-            return json.loads(response.choices[0].message.content)
-        except json.JSONDecodeError:
+            response = await self.client.chat.completions.create(
+                model=settings.openai_model,
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+                response_format={"type": "json_object"},
+                temperature=0.3
+            )
+            logger.info("Successfully received response from OpenAI")
+        except Exception as e:
+            logger.error(f"Failed to call OpenAI: {e}")
+            return {"error": "Failed to extract structured data", "details": str(e)}
+        
+        try:
+            result = json.loads(response.choices[0].message.content)
+            logger.info("Successfully parsed structured data")
+            return result
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON response: {e}")
             return {"error": "Failed to parse structured data", "raw_response": response.choices[0].message.content}

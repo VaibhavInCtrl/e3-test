@@ -1,3 +1,5 @@
 be-e3/.env
 be-e3/env/
 **/__pycache__/
+fe-e3/.env
+fe-e3/node_modules/

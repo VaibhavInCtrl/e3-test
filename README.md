@@ -2,8 +2,8 @@
 
 - LLM: openai gpt-4o
     - why: used for two main things:
-        - dynamic prompt generation - turns simple scenario descriptions into detailed system prompts
-        - post-call analysis - pulls out structured data from call transcripts
+        - dynamic prompt generation: turns simple scenario descriptions into detailed system prompts
+        - post-call analysis: pulls out structured data from call transcripts
     - alternative: retell’s built-in analysis
     - reason for choice: custom llm gives full control on data extraction per scenario.
 - API auth: simple api key
@@ -32,7 +32,7 @@
 
 - prompt generation strategy
     - decision: llm creates detailed prompts from user’s natural language input.
-    - why: lets non-tech users build smart ai agents easily — they just describe what they want.
+    - why: lets non-tech users build smart ai agents easily: they just describe what they want.
 
 - post-processing approach
     - decision: use custom llm extraction instead of retell’s default one.
@@ -48,7 +48,7 @@
 
 - modular architecture
     - decision: split services for agents, drivers, conversations, calls, and webhooks.
-    - why: easy to test, maintain, and scale — each part does one job well.
+    - why: easy to test, maintain, and scale: each part does one job well.
 
 
 # GETTING STARTED

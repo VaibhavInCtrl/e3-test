@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import { Plus } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { SearchInput } from '@/components/ui/search-input'
@@ -13,17 +12,12 @@ import {
 } from '@/components/ui/select'
 import { DriverList } from '@/components/drivers/DriverList'
 import { DriverForm } from '@/components/drivers/DriverForm'
-import { StartCallModal } from '@/components/drivers/StartCallModal'
 import { useDrivers, useCreateDriver, useUpdateDriver, useDeleteDriver } from '@/lib/hooks/useDrivers'
-import { useStartTestCall } from '@/lib/hooks/useTestCall'
 import type { Driver } from '@/types/driver'
 
 export default function Drivers() {
-  const navigate = useNavigate()
   const [formOpen, setFormOpen] = useState(false)
-  const [callModalOpen, setCallModalOpen] = useState(false)
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null)
-  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<string>('created_desc')
 
@@ -31,7 +25,6 @@ export default function Drivers() {
   const createDriver = useCreateDriver()
   const updateDriver = useUpdateDriver()
   const deleteDriver = useDeleteDriver()
-  const startTestCall = useStartTestCall()
 
   const filteredAndSortedDrivers = useMemo(() => {
     let filtered = drivers.filter((driver) =>
@@ -105,45 +98,10 @@ export default function Drivers() {
     }
   }
 
-  const handleStartCall = (driver: Driver) => {
-    setSelectedDriver(driver)
-    setCallModalOpen(true)
-  }
-
-  const handleStartConversation = (data: any) => {
-    if (selectedDriver) {
-      startTestCall.mutate(
-        {
-          agent_id: data.agent_id,
-          driver_id: selectedDriver.id,
-          load_number: data.load_number,
-        },
-        {
-          onSuccess: () => {
-            setCallModalOpen(false)
-            setSelectedDriver(null)
-            toast.success('Conversation started successfully')
-            navigate('/conversations')
-          },
-          onError: () => {
-            toast.error('Failed to start conversation')
-          },
-        }
-      )
-    }
-  }
-
   const handleFormOpenChange = (open: boolean) => {
     setFormOpen(open)
     if (!open) {
       setEditingDriver(null)
-    }
-  }
-
-  const handleCallModalOpenChange = (open: boolean) => {
-    setCallModalOpen(open)
-    if (!open) {
-      setSelectedDriver(null)
     }
   }
 
@@ -153,7 +111,7 @@ export default function Drivers() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Drivers</h1>
           <p className="text-muted-foreground">
-            Manage driver information and start conversations
+            Manage driver information
           </p>
         </div>
         <Button onClick={() => setFormOpen(true)}>
@@ -190,7 +148,6 @@ export default function Drivers() {
           drivers={filteredAndSortedDrivers}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onStartCall={handleStartCall}
         />
       )}
 
@@ -201,16 +158,6 @@ export default function Drivers() {
         driver={editingDriver || undefined}
         isLoading={createDriver.isPending || updateDriver.isPending}
       />
-
-      {selectedDriver && (
-        <StartCallModal
-          open={callModalOpen}
-          onOpenChange={handleCallModalOpenChange}
-          onSubmit={handleStartConversation}
-          driver={selectedDriver}
-          isLoading={startTestCall.isPending}
-        />
-      )}
     </div>
   )
 }

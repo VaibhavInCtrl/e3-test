@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Trash2, Phone } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -21,10 +21,9 @@ interface DriverListProps {
   drivers: Driver[]
   onEdit: (driver: Driver) => void
   onDelete: (id: string) => void
-  onStartCall: (driver: Driver) => void
 }
 
-export function DriverList({ drivers, onEdit, onDelete, onStartCall }: DriverListProps) {
+export function DriverList({ drivers, onEdit, onDelete }: DriverListProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -57,10 +56,6 @@ export function DriverList({ drivers, onEdit, onDelete, onStartCall }: DriverLis
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onStartCall(driver)}>
-                        <Phone className="mr-2 h-4 w-4" />
-                        Start Conversation
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit(driver)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit

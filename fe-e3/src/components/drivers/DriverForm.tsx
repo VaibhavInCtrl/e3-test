@@ -23,7 +23,10 @@ import type { Driver } from '@/types/driver'
 
 const driverSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  phone_number: z.string().min(1, 'Phone number is required'),
+  phone_number: z
+    .string()
+    .min(1, 'Phone number is required')
+    .regex(/^\+?\d+$/, 'Phone number must contain only digits, optionally starting with +'),
 })
 
 type DriverFormData = z.infer<typeof driverSchema>

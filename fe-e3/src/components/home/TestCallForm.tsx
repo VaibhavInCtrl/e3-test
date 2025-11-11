@@ -32,7 +32,13 @@ const testCallSchema = z.object({
   driver_mode: z.enum(['existing', 'new']),
   driver_id: z.string().optional(),
   driver_name: z.string().optional(),
-  driver_phone: z.string().optional(),
+  driver_phone: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^\+?\d+$/.test(val),
+      'Phone number must contain only digits, optionally starting with +'
+    ),
   load_number: z.string().min(1, 'Load number is required'),
 }).refine((data) => {
   if (data.driver_mode === 'existing') {

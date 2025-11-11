@@ -94,11 +94,20 @@ export function AgentDetail({ agentId, onClose, onEdit, onViewConversation }: Ag
           <Separator />
 
           <div>
-            <p className="text-sm text-muted-foreground mb-2">Prompts</p>
+            <p className="text-sm text-muted-foreground mb-2">Scenario Description</p>
             <div className="bg-muted p-4 rounded-lg">
-              <pre className="whitespace-pre-wrap text-sm">{agent.prompts}</pre>
+              <pre className="whitespace-pre-wrap text-sm">{agent.scenario_description || agent.prompts}</pre>
             </div>
           </div>
+
+          {agent.system_prompt && (
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Generated System Prompt</p>
+              <div className="bg-muted p-4 rounded-lg max-h-[300px] overflow-y-auto">
+                <pre className="whitespace-pre-wrap text-sm">{agent.system_prompt}</pre>
+              </div>
+            </div>
+          )}
 
           {agent.additional_details && (
             <div>
@@ -106,6 +115,13 @@ export function AgentDetail({ agentId, onClose, onEdit, onViewConversation }: Ag
               <div className="bg-muted p-4 rounded-lg">
                 <pre className="whitespace-pre-wrap text-sm">{agent.additional_details}</pre>
               </div>
+            </div>
+          )}
+
+          {agent.retell_agent_id && (
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Retell Agent ID</p>
+              <p className="font-mono text-sm">{agent.retell_agent_id}</p>
             </div>
           )}
         </CardContent>

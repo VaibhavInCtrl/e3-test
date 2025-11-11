@@ -7,5 +7,8 @@ export const testCallsApi = {
     const { data } = await apiClient.post('/api/test-calls/start', request)
     return data
   },
-}
 
+  endCall: async (conversationId: string): Promise<void> => {
+    await apiClient.post(`/api/test-calls/${conversationId}/end`)
+  },
+}

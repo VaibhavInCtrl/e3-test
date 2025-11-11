@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { ConversationListItem, Conversation, ConversationStatusResponse } from '@/types/conversation'
+import type { ConversationListItem, Conversation, ConversationStatusResponse, StructuredDataResponse } from '@/types/conversation'
 import type { Message } from '@/types/message'
 
 export const conversationsApi = {
@@ -22,5 +22,9 @@ export const conversationsApi = {
     const { data } = await apiClient.get(`/api/conversations/${id}/status`)
     return data
   },
-}
 
+  getStructuredData: async (id: string): Promise<StructuredDataResponse> => {
+    const { data } = await apiClient.get(`/api/conversations/${id}/structured-data`)
+    return data
+  },
+}

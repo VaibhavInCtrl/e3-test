@@ -24,11 +24,15 @@ import type { Agent } from '@/types/agent'
 
 const agentSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  prompts: z.string().min(1, 'Prompts are required'),
+  prompts: z.string().min(1, 'Scenario description is required'),
   additional_details: z.string().optional(),
 })
 
 type AgentFormData = z.infer<typeof agentSchema>
+
+interface AgentFormDataWithScenario extends AgentFormData {
+  scenario_description?: string
+}
 
 interface AgentFormProps {
   open: boolean
@@ -65,7 +69,11 @@ export function AgentForm({ open, onOpenChange, onSubmit, agent, isLoading }: Ag
   }, [agent, form])
 
   const handleSubmit = (data: AgentFormData) => {
-    onSubmit(data)
+    const submitData: AgentFormDataWithScenario = {
+      ...data,
+      scenario_description: data.prompts
+    }
+    onSubmit(submitData)
     form.reset()
   }
 
@@ -95,11 +103,11 @@ export function AgentForm({ open, onOpenChange, onSubmit, agent, isLoading }: Ag
               name="prompts"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Prompts</FormLabel>
+                  <FormLabel>Scenario Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter agent prompts..."
-                      className="min-h-[120px]"
+                      placeholder="Describe what this agent should do and what data to extract...&#10;&#10;Example: Handle driver check-ins for load deliveries. Determine if driver is in-transit or arrived. For in-transit: get location, ETA, any delays. For arrived: get unloading status. Handle emergencies immediately. Extract: call_outcome, driver_status, current_location, eta, delay_reason, emergency_type."
+                      className="min-h-[180px]"
                       {...field}
                     />
                   </FormControl>

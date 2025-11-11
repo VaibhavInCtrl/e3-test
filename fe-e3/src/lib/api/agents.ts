@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { Agent, AgentListItem, AgentCreate, AgentUpdate } from '@/types/agent'
+import type { Agent, AgentListItem, AgentCreate, AgentUpdate, GeneratePromptRequest, GeneratePromptResponse } from '@/types/agent'
 
 export const agentsApi = {
   list: async (): Promise<AgentListItem[]> => {
@@ -25,5 +25,9 @@ export const agentsApi = {
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/agents/${id}`)
   },
-}
 
+  generatePrompt: async (request: GeneratePromptRequest): Promise<GeneratePromptResponse> => {
+    const { data } = await apiClient.post('/api/agents/generate-prompt', request)
+    return data
+  },
+}

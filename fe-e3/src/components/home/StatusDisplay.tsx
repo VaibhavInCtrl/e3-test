@@ -7,7 +7,9 @@ import { ExternalLink, Loader2 } from 'lucide-react'
 import { ConversationStatus, type Conversation } from '@/types/conversation'
 import { usePolling } from '@/lib/hooks/usePolling'
 import { useConversationMessages } from '@/lib/hooks/useConversations'
+import { useStructuredData } from '@/lib/hooks/useStructuredData'
 import { MessageBubble } from '@/components/conversations/MessageBubble'
+import { StructuredDataDisplay } from '@/components/conversations/StructuredDataDisplay'
 import { formatDate } from '@/lib/utils'
 
 interface StatusDisplayProps {
@@ -24,6 +26,7 @@ const statusColors = {
 export function StatusDisplay({ conversation }: StatusDisplayProps) {
   const { data: statusData } = usePolling(conversation.id, true)
   const { data: messages = [] } = useConversationMessages(conversation.id)
+  const { data: structuredDataResponse } = useStructuredData(conversation.id)
 
   const currentStatus = statusData?.status || conversation.status
   const isInProgress = currentStatus === ConversationStatus.IN_PROGRESS || currentStatus === ConversationStatus.PENDING
@@ -68,6 +71,17 @@ export function StatusDisplay({ conversation }: StatusDisplayProps) {
           )}
         </div>
 
+        {currentStatus === ConversationStatus.COMPLETED && structuredDataResponse?.structured_data && (
+          <>
+            <Separator />
+            <StructuredDataDisplay
+              structuredData={structuredDataResponse.structured_data}
+              recordingUrl={structuredDataResponse.recording_url}
+              durationMs={structuredDataResponse.duration_ms}
+            />
+          </>
+        )}
+
         {messages.length > 0 && (
           <>
             <Separator />
@@ -82,7 +96,7 @@ export function StatusDisplay({ conversation }: StatusDisplayProps) {
           </>
         )}
 
-        {currentStatus === ConversationStatus.COMPLETED && (
+        {currentStatus === ConversationStatus.COMPLETED && !structuredDataResponse?.structured_data && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <p className="text-sm font-medium text-green-900">
               Call completed successfully!

@@ -4,16 +4,38 @@ from datetime import datetime
 from fastapi import HTTPException, status
 from app.database.client import get_supabase
 from app.models.agent import AgentCreate, AgentUpdate, AgentResponse, AgentListResponse
+from app.services.prompt_generation_service import PromptGenerationService
+from app.services.retell_service import RetellService
 
 class AgentService:
     def __init__(self):
         self.supabase = get_supabase()
+        self.prompt_service = PromptGenerationService()
+        self.retell_service = RetellService()
+    
+    def get_prompt_service(self):
+        return self.prompt_service
     
     async def create_agent(self, agent: AgentCreate) -> AgentResponse:
+        scenario_desc = agent.scenario_description or agent.prompts
+        
+        system_prompt = await self.prompt_service.generate_system_prompt(
+            scenario_description=scenario_desc,
+            additional_context=agent.additional_details
+        )
+        
+        retell_agent = await self.retell_service.create_agent(
+            name=agent.name,
+            system_prompt=system_prompt
+        )
+        
         result = self.supabase.table("agents").insert({
             "name": agent.name,
             "prompts": agent.prompts,
-            "additional_details": agent.additional_details
+            "additional_details": agent.additional_details,
+            "scenario_description": scenario_desc,
+            "system_prompt": system_prompt,
+            "retell_agent_id": retell_agent["agent_id"]
         }).execute()
         
         if not result.data:

@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MessageBubble } from './MessageBubble'
+import { StructuredDataDisplay } from './StructuredDataDisplay'
 import { useConversation, useConversationMessages } from '@/lib/hooks/useConversations'
+import { useStructuredData } from '@/lib/hooks/useStructuredData'
 import { ConversationStatus } from '@/types/conversation'
 import { formatDate } from '@/lib/utils'
 
@@ -23,6 +25,7 @@ const statusColors = {
 export function ConversationDetail({ conversationId, onClose }: ConversationDetailProps) {
   const { data: conversation, isLoading: conversationLoading } = useConversation(conversationId)
   const { data: messages = [], isLoading: messagesLoading } = useConversationMessages(conversationId)
+  const { data: structuredDataResponse } = useStructuredData(conversationId)
 
   if (conversationLoading || messagesLoading) {
     return (
@@ -74,6 +77,17 @@ export function ConversationDetail({ conversationId, onClose }: ConversationDeta
         </div>
 
         <Separator />
+
+        {conversation.status === ConversationStatus.COMPLETED && structuredDataResponse?.structured_data && (
+          <>
+            <StructuredDataDisplay
+              structuredData={structuredDataResponse.structured_data}
+              recordingUrl={structuredDataResponse.recording_url}
+              durationMs={structuredDataResponse.duration_ms}
+            />
+            <Separator />
+          </>
+        )}
 
         <div>
           <h3 className="font-semibold mb-4">Transcript</h3>

@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import agents, drivers, conversations, test_calls
+from app.routes import agents, drivers, conversations, test_calls, webhooks
 
 app = FastAPI(
     title="E3 Backend API",
@@ -36,6 +36,7 @@ app.include_router(agents.router)
 app.include_router(drivers.router)
 app.include_router(conversations.router)
 app.include_router(test_calls.router)
+app.include_router(webhooks.router)
 
 @app.get("/")
 async def root():

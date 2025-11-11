@@ -13,6 +13,12 @@ export interface Conversation {
   status: ConversationStatus
   started_at: string
   completed_at: string | null
+  retell_call_id: string | null
+  retell_access_token: string | null
+  recording_url: string | null
+  transcript: string | null
+  duration_ms: number | null
+  structured_data: Record<string, any> | null
 }
 
 export interface ConversationListItem {
@@ -33,3 +39,9 @@ export interface ConversationStatusResponse {
   completed_at: string | null
 }
 
+export interface StructuredDataResponse {
+  conversation_id: string
+  structured_data: Record<string, any> | null
+  recording_url: string | null
+  duration_ms: number | null
+}
